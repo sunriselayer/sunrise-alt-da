@@ -1,67 +1,104 @@
 package sunrise
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
-	client "github.com/celestiaorg/celestia-openrpc"
 	plasma "github.com/ethereum-optimism/optimism/op-plasma"
 	"github.com/ethereum/go-ethereum/log"
+	api "github.com/sunriselayer/sunrise-data/api"
 )
 
 const VersionByte = 0x0c
 
-type CelestiaConfig struct {
+type SunriseConfig struct {
 	URL       string
-	AuthToken string
 	Namespace []byte
 }
 
-// CelestiaStore implements DAStorage with celestia backend
-type CelestiaStore struct {
+// SunriseStore implements DAStorage with sunrise backend
+type SunriseStore struct {
 	Log        log.Logger
+	Config     SunriseConfig
 	GetTimeout time.Duration
 	Namespace  []byte
-	Client     *client.Client
 }
 
-// NewCelestiaStore returns a celestia store.
-func NewCelestiaStore(cfg CelestiaConfig) *CelestiaStore {
+// NewSunriseStore returns a sunrise store.
+func NewSunriseStore(cfg SunriseConfig) *SunriseStore {
 	Log := log.New()
-	ctx := context.Background()
-	client, err := client.NewClient(ctx, cfg.URL, cfg.AuthToken)
-	if err != nil {
-		Log.Crit(err.Error())
-	}
-	return &CelestiaStore{
+
+	return &SunriseStore{
 		Log:        Log,
-		Client:     client,
+		Config:     cfg,
 		GetTimeout: time.Minute,
 		Namespace:  cfg.Namespace,
 	}
 }
 
-func (d *CelestiaStore) Get(ctx context.Context, key []byte) ([]byte, error) {
-	log.Info("celestia: blob request", "id", hex.EncodeToString(key))
+func (d *SunriseStore) Get(ctx context.Context, key []byte) ([]byte, error) {
+	log.Info("sunrise: blob request", "id", hex.EncodeToString(key))
 	ctx, cancel := context.WithTimeout(context.Background(), d.GetTimeout)
-	blobs, err := d.Client.DA.Get(ctx, [][]byte{key[2:]}, d.Namespace)
+
+	resp, err := http.Get(fmt.Sprintf("%s/api/get-blob?metadata_uri=%s", d.Config.URL, key))
+	if err != nil {
+		return nil, fmt.Errorf("sunrise: failed to get blob: %w", err)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("sunrise: failed to read response body: %w", err)
+	}
+
+	blobResp := api.GetBlobResponse{}
+	err = json.Unmarshal(body, &blobResp)
+	if err != nil {
+		return nil, fmt.Errorf("sunrise: failed to unmarshal response body: %w", err)
+	}
+	blobs := blobResp.Blob
+
 	cancel()
 	if err != nil || len(blobs) == 0 {
-		return nil, fmt.Errorf("celestia: failed to resolve frame: %w", err)
+		return nil, fmt.Errorf("sunrise: failed to resolve frame: %w", err)
 	}
-	if len(blobs) != 1 {
-		d.Log.Warn("celestia: unexpected length for blobs", "expected", 1, "got", len(blobs))
-	}
-	return blobs[0], nil
+
+	return []byte(blobs), nil
 }
 
-func (d *CelestiaStore) Put(ctx context.Context, data []byte) ([]byte, error) {
-	ids, err := d.Client.DA.Submit(ctx, [][]byte{data}, -1, d.Namespace)
-	if err == nil && len(ids) == 1 {
-		d.Log.Info("celestia: blob successfully submitted", "id", hex.EncodeToString(ids[0]))
-		commitment := plasma.NewGenericCommitment(append([]byte{VersionByte}, ids[0]...))
+func (d *SunriseStore) Put(ctx context.Context, data []byte) ([]byte, error) {
+	publishReq := api.PublishRequest{
+		Blob:             base64.StdEncoding.EncodeToString(data),
+		DataShardCount:   10,
+		ParityShardCount: 10,
+		Protocol:         "ipfs",
+	}
+	jsonData, err := json.Marshal(publishReq)
+	if err != nil {
+		return nil, fmt.Errorf("sunrise: failed to marshal publish request: %w", err)
+	}
+	resp, err := http.Post(fmt.Sprintf("%s/api/publish", d.Config.URL), "application/json", bytes.NewBuffer(jsonData))
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("sunrise: failed to read response body: %w", err)
+	}
+
+	publishResp := api.PublishResponse{}
+	err = json.Unmarshal(body, &publishResp)
+	if err != nil {
+		return nil, fmt.Errorf("sunrise: failed to unmarshal response body: %w", err)
+	}
+
+	if err == nil {
+		d.Log.Info("sunrise: blob successfully submitted", "uri", publishResp.MetadataUri)
+		commitment := plasma.NewGenericCommitment(append([]byte{VersionByte}, []byte(publishResp.MetadataUri)...))
 		return commitment.Encode(), nil
 	}
 	return nil, err

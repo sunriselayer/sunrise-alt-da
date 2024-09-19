@@ -17,18 +17,18 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-type CelestiaServer struct {
+type SunriseServer struct {
 	log        log.Logger
 	endpoint   string
-	store      *CelestiaStore
+	store      *SunriseStore
 	tls        *rpc.ServerTLSConfig
 	httpServer *http.Server
 	listener   net.Listener
 }
 
-func NewCelestiaServer(host string, port int, store *CelestiaStore, log log.Logger) *CelestiaServer {
+func NewSunriseServer(host string, port int, store *SunriseStore, log log.Logger) *SunriseServer {
 	endpoint := net.JoinHostPort(host, strconv.Itoa(port))
-	return &CelestiaServer{
+	return &SunriseServer{
 		log:      log,
 		endpoint: endpoint,
 		store:    store,
@@ -38,7 +38,7 @@ func NewCelestiaServer(host string, port int, store *CelestiaStore, log log.Logg
 	}
 }
 
-func (d *CelestiaServer) Start() error {
+func (d *SunriseServer) Start() error {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/get/", d.HandleGet)
@@ -78,7 +78,7 @@ func (d *CelestiaServer) Start() error {
 	}
 }
 
-func (d *CelestiaServer) HandleGet(w http.ResponseWriter, r *http.Request) {
+func (d *SunriseServer) HandleGet(w http.ResponseWriter, r *http.Request) {
 	d.log.Debug("GET", "url", r.URL)
 
 	route := path.Dir(r.URL.Path)
@@ -109,7 +109,7 @@ func (d *CelestiaServer) HandleGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (d *CelestiaServer) HandlePut(w http.ResponseWriter, r *http.Request) {
+func (d *SunriseServer) HandlePut(w http.ResponseWriter, r *http.Request) {
 	d.log.Debug("PUT", "url", r.URL)
 
 	route := path.Base(r.URL.Path)
@@ -137,11 +137,11 @@ func (d *CelestiaServer) HandlePut(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (b *CelestiaServer) Endpoint() string {
+func (b *SunriseServer) Endpoint() string {
 	return b.listener.Addr().String()
 }
 
-func (b *CelestiaServer) Stop() error {
+func (b *SunriseServer) Stop() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_ = b.httpServer.Shutdown(ctx)

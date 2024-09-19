@@ -5,8 +5,9 @@ import (
 
 	oplog "github.com/ethereum-optimism/optimism/op-service/log"
 	"github.com/ethereum-optimism/optimism/op-service/opio"
-	sunrise "github.com/sunriselayer/sunrise-alt-da"
 	"github.com/urfave/cli/v2"
+
+	sunrise "github.com/sunriselayer/sunrise-alt-da"
 )
 
 type Server interface {
@@ -35,9 +36,9 @@ func StartDAServer(cliCtx *cli.Context) error {
 
 	switch {
 	case cfg.SunriseEnabled():
-		l.Info("Using celestia storage", "url", cfg.SunriseConfig().URL)
-		store := sunrise.NewCelestiaStore()
-		server = sunrise.NewCelestiaServer(cliCtx.String(ListenAddrFlagName), cliCtx.Int(PortFlagName), store, l)
+		l.Info("Using sunrise storage", "url", cfg.SunriseConfig().URL)
+		store := sunrise.NewSunriseStore(cfg.SunriseConfig())
+		server = sunrise.NewSunriseServer(cliCtx.String(ListenAddrFlagName), cliCtx.Int(PortFlagName), store, l)
 	}
 
 	if err := server.Start(); err != nil {
