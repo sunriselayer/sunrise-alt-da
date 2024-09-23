@@ -7,14 +7,17 @@ import (
 
 	opservice "github.com/ethereum-optimism/optimism/op-service"
 	oplog "github.com/ethereum-optimism/optimism/op-service/log"
-	sunrise "github.com/sunriselayer/sunrise-alt-da"
 	"github.com/urfave/cli/v2"
+
+	sunrise "github.com/sunriselayer/sunrise-alt-da"
 )
 
 const (
-	ListenAddrFlagName       = "addr"
-	PortFlagName             = "port"
-	SunriseServerFlagName    = "sunrise.server"
+	ListenAddrFlagName    = "addr"
+	PortFlagName          = "port"
+	GenericCommFlagName   = "generic-commitment"
+	SunriseServerFlagName = "sunrise.server"
+	// SunriseAuthTokenFlagName = "sunrise.auth-token"
 	SunriseNamespaceFlagName = "sunrise.namespace"
 )
 
@@ -37,12 +40,24 @@ var (
 		Value:   3100,
 		EnvVars: prefixEnvVars("PORT"),
 	}
+	GenericCommFlag = &cli.BoolFlag{
+		Name:    GenericCommFlagName,
+		Usage:   "enable generic commitments for testing. Not for production use.",
+		EnvVars: prefixEnvVars("GENERIC_COMMITMENT"),
+		Value:   true,
+	}
 	SunriseServerFlag = &cli.StringFlag{
 		Name:    SunriseServerFlagName,
 		Usage:   "sunrise server endpoint",
 		Value:   "http://localhost:26658",
 		EnvVars: prefixEnvVars("SUNRISE_SERVER"),
 	}
+	// SunriseAuthTokenFlag = &cli.StringFlag{
+	// 	Name:    SunriseAuthTokenFlagName,
+	// 	Usage:   "sunrise auth token",
+	// 	Value:   "",
+	// 	EnvVars: prefixEnvVars("SUNRISE_AUTH_TOKEN"),
+	// }
 	SunriseNamespaceFlag = &cli.StringFlag{
 		Name:    SunriseNamespaceFlagName,
 		Usage:   "sunrise namespace",
@@ -57,7 +72,9 @@ var requiredFlags = []cli.Flag{
 }
 
 var optionalFlags = []cli.Flag{
+	GenericCommFlag,
 	SunriseServerFlag,
+	// SunriseAuthTokenFlag,
 	SunriseNamespaceFlag,
 }
 
@@ -70,19 +87,23 @@ func init() {
 var Flags []cli.Flag
 
 type CLIConfig struct {
-	SunriseEndpoint  string
+	UseGenericComm  bool
+	SunriseEndpoint string
+	// SunriseAuthToken string
 	SunriseNamespace string
 }
 
 func ReadCLIConfig(ctx *cli.Context) CLIConfig {
 	return CLIConfig{
-		SunriseEndpoint:  ctx.String(SunriseServerFlagName),
+		UseGenericComm:  ctx.Bool(GenericCommFlagName),
+		SunriseEndpoint: ctx.String(SunriseServerFlagName),
+		// SunriseAuthToken: ctx.String(SunriseAuthTokenFlagName),
 		SunriseNamespace: ctx.String(SunriseNamespaceFlagName),
 	}
 }
 
 func (c CLIConfig) Check() error {
-	if c.SunriseEnabled() && (c.SunriseEndpoint == "" || c.SunriseNamespace == "") {
+	if c.SunriseEnabled() && (c.SunriseEndpoint == "" || /* c.SunriseAuthToken == "" || */ c.SunriseNamespace == "") {
 		return errors.New("all Sunrise flags must be set")
 	}
 	if c.SunriseEnabled() {
@@ -96,13 +117,14 @@ func (c CLIConfig) Check() error {
 func (c CLIConfig) SunriseConfig() sunrise.SunriseConfig {
 	ns, _ := hex.DecodeString(c.SunriseNamespace)
 	return sunrise.SunriseConfig{
-		URL:       c.SunriseEndpoint,
+		URL: c.SunriseEndpoint,
+		// AuthToken: c.SunriseAuthToken,
 		Namespace: ns,
 	}
 }
 
 func (c CLIConfig) SunriseEnabled() bool {
-	return !(c.SunriseEndpoint == "" && c.SunriseNamespace == "")
+	return !(c.SunriseEndpoint == "" && /* c.SunriseAuthToken == "" && */ c.SunriseNamespace == "")
 }
 
 func CheckRequired(ctx *cli.Context) error {
