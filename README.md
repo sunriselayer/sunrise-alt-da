@@ -46,7 +46,7 @@ You can refer the [sunrise repo](https://github.com/sunriselayer/sunrise) for th
 da-server
       --generic-commitment=true
       --sunrise.server=http://localhost:8000
-      --celestia.namespace=$NAMESPACE
+      --sunrise.namespace=$NAMESPACE
 ```
 
 ## Configure Your `op-node`
