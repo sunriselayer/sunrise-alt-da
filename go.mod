@@ -250,8 +250,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/sunriselayer/sunrise v0.0.0-00010101000000-000000000000 // indirect
-	github.com/sunriselayer/sunrise/x/da/erasurecoding v0.0.0-00010101000000-000000000000 // indirect
+	github.com/sunriselayer/sunrise v0.3.0-rc0 // indirect
+	github.com/sunriselayer/sunrise/x/da/erasurecoding v0.3.0-rc0 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
