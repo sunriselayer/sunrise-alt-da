@@ -7,7 +7,7 @@ LDFLAGSSTRING +=-X main.GitDate=$(GITDATE)
 LDFLAGSSTRING +=-X main.Version=$(VERSION)
 LDFLAGS := -ldflags "$(LDFLAGSSTRING)"
 
-install:
+da-server:
 	env GO111MODULE=on GOOS=$(TARGETOS) GOARCH=$(TARGETARCH) go build -v $(LDFLAGS) -o ./bin/da-server ./cmd/da-server
 
 clean:
