@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -13,12 +12,12 @@ import (
 )
 
 const (
-	ListenAddrFlagName    = "addr"
-	PortFlagName          = "port"
-	GenericCommFlagName   = "generic-commitment"
-	SunriseServerFlagName = "sunrise.server"
-	// SunriseAuthTokenFlagName = "sunrise.auth-token"
-	SunriseNamespaceFlagName = "sunrise.namespace"
+	ListenAddrFlagName = "addr"
+	PortFlagName       = "port"
+
+	SunriseServerFlagName           = "sunrise.server"
+	SunriseDataShardCountFlagName   = "sunrise.data_shard_count"
+	SunriseParityShardCountFlagName = "sunrise.parity_shard_count"
 )
 
 const EnvVarPrefix = "OP_PLASMA_DA_SERVER"
@@ -40,43 +39,36 @@ var (
 		Value:   3100,
 		EnvVars: prefixEnvVars("PORT"),
 	}
-	GenericCommFlag = &cli.BoolFlag{
-		Name:    GenericCommFlagName,
-		Usage:   "enable generic commitments for testing. Not for production use.",
-		EnvVars: prefixEnvVars("GENERIC_COMMITMENT"),
-		Value:   true,
-	}
+
 	SunriseServerFlag = &cli.StringFlag{
 		Name:    SunriseServerFlagName,
 		Usage:   "sunrise server endpoint",
 		Value:   "http://localhost:26658",
 		EnvVars: prefixEnvVars("SUNRISE_SERVER"),
 	}
-	// SunriseAuthTokenFlag = &cli.StringFlag{
-	// 	Name:    SunriseAuthTokenFlagName,
-	// 	Usage:   "sunrise auth token",
-	// 	Value:   "",
-	// 	EnvVars: prefixEnvVars("SUNRISE_AUTH_TOKEN"),
-	// }
-	SunriseNamespaceFlag = &cli.StringFlag{
-		Name:    SunriseNamespaceFlagName,
-		Usage:   "sunrise namespace",
-		Value:   "",
-		EnvVars: prefixEnvVars("SUNRISE_NAMESPACE"),
+	SunriseDataShardCountFlag = &cli.IntFlag{
+		Name:    SunriseDataShardCountFlagName,
+		Usage:   "sunrise data shard count",
+		Value:   10,
+		EnvVars: prefixEnvVars("SUNRISE_DATA_SHARD_COUNT"),
+	}
+	SunriseParityShardCountFlag = &cli.IntFlag{
+		Name:    SunriseParityShardCountFlagName,
+		Usage:   "sunrise parity shard count",
+		Value:   10,
+		EnvVars: prefixEnvVars("SUNRISE_PARITY_SHARD_COUNT"),
 	}
 )
 
 var requiredFlags = []cli.Flag{
 	ListenAddrFlag,
 	PortFlag,
+	SunriseServerFlag,
+	SunriseDataShardCountFlag,
+	SunriseParityShardCountFlag,
 }
 
-var optionalFlags = []cli.Flag{
-	GenericCommFlag,
-	SunriseServerFlag,
-	// SunriseAuthTokenFlag,
-	SunriseNamespaceFlag,
-}
+var optionalFlags = []cli.Flag{}
 
 func init() {
 	optionalFlags = append(optionalFlags, oplog.CLIFlags(EnvVarPrefix)...)
@@ -87,44 +79,35 @@ func init() {
 var Flags []cli.Flag
 
 type CLIConfig struct {
-	UseGenericComm  bool
-	SunriseEndpoint string
-	// SunriseAuthToken string
-	SunriseNamespace string
+	SunriseEndpoint         string
+	SunriseDataShardCount   int
+	SunriseParityShardCount int
 }
 
 func ReadCLIConfig(ctx *cli.Context) CLIConfig {
 	return CLIConfig{
-		UseGenericComm:  ctx.Bool(GenericCommFlagName),
-		SunriseEndpoint: ctx.String(SunriseServerFlagName),
-		// SunriseAuthToken: ctx.String(SunriseAuthTokenFlagName),
-		SunriseNamespace: ctx.String(SunriseNamespaceFlagName),
+		SunriseEndpoint:         ctx.String(SunriseServerFlagName),
+		SunriseDataShardCount:   ctx.Int(SunriseDataShardCountFlagName),
+		SunriseParityShardCount: ctx.Int(SunriseParityShardCountFlagName),
 	}
 }
 
 func (c CLIConfig) Check() error {
-	if c.SunriseEnabled() && (c.SunriseEndpoint == "" || /* c.SunriseAuthToken == "" || */ c.SunriseNamespace == "") {
+	if c.SunriseEndpoint == "" {
 		return errors.New("all Sunrise flags must be set")
 	}
-	if c.SunriseEnabled() {
-		if _, err := hex.DecodeString(c.SunriseNamespace); err != nil {
-			return err
-		}
+	if c.SunriseDataShardCount == 0 || c.SunriseParityShardCount == 0 {
+		return errors.New("data and parity shard count must be greater than 0")
 	}
 	return nil
 }
 
 func (c CLIConfig) SunriseConfig() sunrise.SunriseConfig {
-	ns, _ := hex.DecodeString(c.SunriseNamespace)
 	return sunrise.SunriseConfig{
-		URL: c.SunriseEndpoint,
-		// AuthToken: c.SunriseAuthToken,
-		Namespace: ns,
+		URL:              c.SunriseEndpoint,
+		DataShardCount:   c.SunriseDataShardCount,
+		ParityShardCount: c.SunriseParityShardCount,
 	}
-}
-
-func (c CLIConfig) SunriseEnabled() bool {
-	return !(c.SunriseEndpoint == "" && /* c.SunriseAuthToken == "" && */ c.SunriseNamespace == "")
 }
 
 func CheckRequired(ctx *cli.Context) error {

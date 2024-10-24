@@ -30,16 +30,13 @@ func StartDAServer(cliCtx *cli.Context) error {
 	l := oplog.NewLogger(oplog.AppOut(cliCtx), logCfg)
 	oplog.SetGlobalLogHandler(l.Handler())
 
-	l.Info("Initializing Plasma DA server...")
+	l.Info("Initializing Alt DA server...")
 
 	var server Server
 
-	switch {
-	case cfg.SunriseEnabled():
-		l.Info("Using sunrise storage", "url", cfg.SunriseConfig().URL)
-		store := sunrise.NewSunriseStore(cfg.SunriseConfig())
-		server = sunrise.NewSunriseServer(cliCtx.String(ListenAddrFlagName), cliCtx.Int(PortFlagName), store, l)
-	}
+	l.Info("Using sunrise storage", "server_url", cfg.SunriseConfig().URL, "data_shard_count", cfg.SunriseConfig().DataShardCount, "parity_shard_count", cfg.SunriseConfig().ParityShardCount)
+	store := sunrise.NewSunriseStore(cfg.SunriseConfig(), l)
+	server = sunrise.NewSunriseServer(cliCtx.String(ListenAddrFlagName), cliCtx.Int(PortFlagName), store, l)
 
 	if err := server.Start(); err != nil {
 		return fmt.Errorf("failed to start the DA server")
