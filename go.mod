@@ -4,19 +4,16 @@ go 1.22.7
 
 toolchain go1.22.8
 
-replace (
-	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/sunriselayer/sunrise => ../sunrise
-	github.com/sunriselayer/sunrise-data => ../sunrise-data
-	github.com/sunriselayer/sunrise/x/da/erasurecoding => ../sunrise/x/da/erasurecoding
-)
+replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 require (
 	github.com/ethereum-optimism/optimism v1.9.1
 	github.com/ethereum/go-ethereum v1.14.8
 	github.com/prometheus/client_golang v1.20.2 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
-	github.com/sunriselayer/sunrise-data v0.0.0
+	github.com/stretchr/testify v1.9.0
+	github.com/sunriselayer/sunrise v0.3.0-rc1 // indirect
+	github.com/sunriselayer/sunrise-data v0.0.0-20241024151849-41c003ce9bcc
+	github.com/sunriselayer/sunrise/x/da/erasurecoding v0.0.0-20241024013259-89fff8d362fb // indirect
 	github.com/urfave/cli/v2 v2.27.4
 )
 
@@ -251,8 +248,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.19.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/sunriselayer/sunrise v0.3.0-rc1 // indirect
-	github.com/sunriselayer/sunrise/x/da/erasurecoding v0.0.0-20241024013259-89fff8d362fb // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
