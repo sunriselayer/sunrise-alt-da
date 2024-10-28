@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	plasma "github.com/ethereum-optimism/optimism/op-plasma"
+	altda "github.com/ethereum-optimism/optimism/op-alt-da"
 	"github.com/ethereum-optimism/optimism/op-service/rpc"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/log"
@@ -95,7 +95,7 @@ func (d *SunriseServer) HandleGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input, err := d.store.Get(r.Context(), comm)
-	if err != nil && errors.Is(err, plasma.ErrNotFound) {
+	if err != nil && errors.Is(err, altda.ErrNotFound) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

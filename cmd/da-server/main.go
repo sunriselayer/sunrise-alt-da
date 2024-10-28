@@ -21,8 +21,8 @@ func main() {
 	app.Flags = cliapp.ProtectFlags(Flags)
 	app.Version = opservice.FormatVersion(Version, "", "", "")
 	app.Name = "da-server"
-	app.Usage = "Plasma DA Storage Service"
-	app.Description = "Service for storing plasma DA inputs to Sunrise"
+	app.Usage = "Alt DA Storage Service"
+	app.Description = "Service for storing Alt DA inputs to Sunrise"
 	app.Action = StartDAServer
 
 	ctx := opio.WithInterruptBlocker(context.Background())
