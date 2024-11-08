@@ -60,15 +60,13 @@ var (
 	}
 )
 
-var requiredFlags = []cli.Flag{
-	ListenAddrFlag,
+var requiredFlags = []cli.Flag{}
+
+var optionalFlags = []cli.Flag{ListenAddrFlag,
 	PortFlag,
 	SunriseServerFlag,
 	SunriseDataShardCountFlag,
-	SunriseParityShardCountFlag,
-}
-
-var optionalFlags = []cli.Flag{}
+	SunriseParityShardCountFlag}
 
 func init() {
 	optionalFlags = append(optionalFlags, oplog.CLIFlags(EnvVarPrefix)...)
