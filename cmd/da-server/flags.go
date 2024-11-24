@@ -8,7 +8,7 @@ import (
 	oplog "github.com/ethereum-optimism/optimism/op-service/log"
 	"github.com/urfave/cli/v2"
 
-	sunrise "github.com/sunriselayer/sunrise-alt-da"
+	sunrise "github.com/sunriselayer/sunrise-op-da-server"
 )
 
 const (
