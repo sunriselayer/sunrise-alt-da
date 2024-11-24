@@ -1,14 +1,13 @@
-# Overview:
+# Sunrise OP DA Server
 
-This repo implements a sunrise `da-server` for Alt-DA mode using generic
+This repo implements a Sunrise DA Server for Alt-DA mode using generic
 commitments.
 
-The `da-server` connects to a sunrise-node running as a sidecar process.
+The `sunrise-op-da-server` connects to a sunrise-node running as a sidecar process.
 
 sunrise da-server accepts the following flags for sunrise storage
 
-````
-
+```shell
     --sunrise.server value             (default: "http://localhost:26658") ($OP_PLASMA_DA_SERVER_SUNRISE_SERVER)
           sunrise server endpoint
 
@@ -17,15 +16,14 @@ sunrise da-server accepts the following flags for sunrise storage
 
     --sunrise.parity-shard-count value (default: 10)                    ($OP_PLASMA_DA_SERVER_SUNRISE_PARITY_SHARD_COUNT)
           sunrise parity shard count
-````
+```
 
 The sunrise server endpoint should be set to the sunrise-data backend,
 usually `http://127.0.0.1:8000`.
 
+## How to run testnet with da-server
 
-# How to run testnet with da-server
-
-## Prerequisites
+### Prerequisites
 
 You should use at least the following compatible op* versions when running your chain.
 
@@ -84,5 +82,3 @@ da-server
     --altda.verify-on-read             (default: true)                    ($OP_BATCHER_ALTDA_VERIFY_ON_READ)
           Verify input data matches the commitments from the DA storage service
 ```
-
-
