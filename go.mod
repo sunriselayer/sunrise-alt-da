@@ -1,4 +1,4 @@
-module github.com/sunriselayer/sunrise-alt-da
+module github.com/sunriselayer/sunrise-op-da-server
 
 go 1.22.7
 
